@@ -1,14 +1,12 @@
 import tkinter as tk
-from tkinter import messagebox
-from tkinter import ttk
+from tkinter import messagebox, ttk
 import pandas as pd
 import random
 import time
 import csv
 
-
 class QuizApp:
-    def __init__(self, root, question_data):
+    def __init__(self, root, question_data, practice_mode=False):
         self.root = root
         self.root.title("Quiz Application")
         self.root.geometry("700x700")
@@ -18,35 +16,22 @@ class QuizApp:
         self.current_question = 0
         self.score = 0
         self.selected_option = tk.StringVar()
-        self.total_questions = 20
+        self.total_questions = min(20, len(self.question_data))  # Giới hạn số câu hỏi tối đa là 20
+
+        self.practice_mode = practice_mode  # Check if we're in practice mode
 
         self.answer_times = []
 
-        # Timer setup
-        self.timer = 1200
-        self.timer_label = tk.Label(self.root, text=f"Time left: {self.format_time(self.timer)}",
-                                    font=("Arial", 14, "bold"), fg="#ff5252", bg="#ffffff")
-        self.timer_label.pack(pady=10)
-
-        self.selected_questions = random.sample(self.question_data, min(self.total_questions, len(self.question_data)))
+        if not self.practice_mode:
+            # Timer setup for quiz mode
+            self.timer = 1200
+            self.timer_label = tk.Label(self.root, text=f"Time left: {self.format_time(self.timer)}",
+                                        font=("Arial", 14, "bold"), fg="#ff5252", bg="#ffffff")
+            self.timer_label.pack(pady=10)
+            self.selected_questions = random.sample(self.question_data, self.total_questions)  # Lấy ngẫu nhiên 20 câu hỏi
+            self.countdown()
 
         self.create_ui()
-        self.countdown()
-
-    def format_time(self, seconds):
-        """Format time in MM:SS."""
-        minutes = seconds // 60
-        seconds = seconds % 60
-        return f"{minutes:02}:{seconds:02}"
-
-    def countdown(self):
-        """Countdown timer."""
-        if self.timer > 0:
-            self.timer -= 1
-            self.timer_label.config(text=f"Time left: {self.format_time(self.timer)}")
-            self.root.after(1000, self.countdown)
-        else:
-            self.submit_answer(force=True)
 
     def create_ui(self):
         """Set up the main user interface."""
@@ -118,11 +103,22 @@ class QuizApp:
                                      activebackground="#F57C00", activeforeground="white", width=15, bd=0)
         self.hint_button.pack(side="left", padx=10)
 
+        self.back_to_menu_button = tk.Button(self.button_frame, text="Back to Menu", command=self.back_to_menu,
+                                             font=("Arial", 14), bg="#FFC107", fg="white",
+                                             activebackground="#FFB300", activeforeground="white", width=15, bd=0)
+        self.back_to_menu_button.pack(side="left", padx=10)
+
         self.show_question()
+
+    def back_to_menu(self):
+        """Go back to the main menu."""
+        self.root.destroy()  # Destroy the current window
+        start_mode_choice()  # Show the mode selection menu again
+
 
     def show_question(self):
         """Display the current question and options."""
-        question = self.selected_questions[self.current_question]
+        question = self.selected_questions[self.current_question] if not self.practice_mode else self.question_data[self.current_question]
         self.question_label.config(text=f"Q{self.current_question + 1}: {question['Question']}")
         self.selected_option.set(-1)
 
@@ -134,7 +130,8 @@ class QuizApp:
         self.status_label.config(text=f"Question {self.current_question + 1}/{self.total_questions}")
         self.progress.set(self.current_question + 1)
 
-        self.start_time = time.time()
+        if not self.practice_mode:
+            self.start_time = time.time()
 
     def submit_answer(self, force=False):
         """Submit the selected answer."""
@@ -143,7 +140,7 @@ class QuizApp:
             return
 
         selected_index = int(self.selected_option.get()) if not force else -1
-        question = self.selected_questions[self.current_question]
+        question = self.selected_questions[self.current_question] if not self.practice_mode else self.question_data[self.current_question]
 
         correct_answers = question["Answer"].split(',')
         correct_answers = [answer.strip() for answer in correct_answers]
@@ -153,25 +150,28 @@ class QuizApp:
         if user_answer in correct_answers:
             self.score += 1
 
-        answer_time = time.time() - self.start_time
-        self.answer_times.append({
-            'question': question['Question'],
-            'user_answer': user_answer if user_answer else "No answer",
-            'correct_answer': ', '.join(correct_answers),
-            'time_taken': round(answer_time, 2)
-        })
+        if not self.practice_mode:
+            answer_time = time.time() - self.start_time
+            self.answer_times.append({
+                'question': question['Question'],
+                'user_answer': user_answer if user_answer else "No answer",
+                'correct_answer': ', '.join(correct_answers),
+                'time_taken': round(answer_time, 2)
+            })
 
         self.current_question += 1
 
-        if self.current_question < len(self.selected_questions):
+        if self.current_question < len(self.selected_questions) if not self.practice_mode else len(self.question_data):
             self.show_question()
         else:
             self.show_result()
 
     def show_result(self):
         """Display the final result."""
-        messagebox.showinfo("Quiz Completed", f"Your score is: {self.score}/{self.total_questions}")
-        self.save_results()  # Save results to CSV
+        if not self.practice_mode:
+            messagebox.showinfo("Quiz Completed", f"Your score is: {self.score}/{self.total_questions}")
+            self.save_results()  # Save results to CSV
+
         self.submit_button.config(state="disabled")
         self.restart_button.pack(pady=10)
         self.details_button.pack(pady=10)
@@ -195,45 +195,50 @@ class QuizApp:
         """Restart the quiz."""
         self.current_question = 0
         self.score = 0
-        self.timer = 1200
         self.answer_times = []
         self.selected_questions = random.sample(self.question_data, min(self.total_questions, len(self.question_data)))
         self.submit_button.config(state="normal")
         self.restart_button.pack_forget()
         self.details_button.pack_forget()
         self.show_question()
-        self.countdown()
+        if not self.practice_mode:
+            self.countdown()
 
     def show_answer_details(self):
         """Show detailed answers."""
         result_window = tk.Toplevel(self.root)
         result_window.title("Answer Details")
-        result_window.geometry("700x400")
+        result_window.geometry("600x400")
 
-        canvas = tk.Canvas(result_window)
-        scrollbar = ttk.Scrollbar(result_window, orient="vertical", command=canvas.yview)
-        scrollable_frame = tk.Frame(canvas)
+        scrollable_frame = tk.Frame(result_window)
+        scrollable_frame.pack(fill="both", expand=True)
 
-        scrollable_frame.bind("<Configure>", lambda e: canvas.configure(scrollregion=canvas.bbox("all")))
-        canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
+        canvas = tk.Canvas(scrollable_frame)
+        scrollbar = ttk.Scrollbar(scrollable_frame, orient="vertical", command=canvas.yview)
+        answer_frame = tk.Frame(canvas)
+
+        answer_frame.bind("<Configure>",
+                          lambda e: canvas.configure(scrollregion=canvas.bbox("all")))
+
+        canvas.create_window((0, 0), window=answer_frame, anchor="nw")
         canvas.configure(yscrollcommand=scrollbar.set)
 
         canvas.pack(side="left", fill="both", expand=True)
         scrollbar.pack(side="right", fill="y")
 
         for item in self.answer_times:
-            question_label = tk.Label(scrollable_frame, text=f"{item['question']}", font=("Arial", 12))
-            user_answer_label = tk.Label(scrollable_frame, text=f"Your Answer: {item['user_answer']}",
+            question_label = tk.Label(answer_frame, text=f"{item['question']}", font=("Arial", 12))
+            user_answer_label = tk.Label(answer_frame, text=f"Your Answer: {item['user_answer']}",
                                          font=("Arial", 12))
-            correct_answer_label = tk.Label(scrollable_frame, text=f"Correct Answer: {item['correct_answer']}",
+            correct_answer_label = tk.Label(answer_frame, text=f"Correct Answer: {item['correct_answer']}",
                                             font=("Arial", 12))
-            time_taken_label = tk.Label(scrollable_frame, text=f"Time Taken: {item['time_taken']}s", font=("Arial", 12))
+            time_taken_label = tk.Label(answer_frame, text=f"Time Taken: {item['time_taken']}s", font=("Arial", 12))
 
             question_label.pack(pady=5)
             user_answer_label.pack(pady=5)
             correct_answer_label.pack(pady=5)
             time_taken_label.pack(pady=5)
-            tk.Label(scrollable_frame, text="-" * 60).pack(pady=5)
+            tk.Label(answer_frame, text="-" * 60).pack(pady=5)
 
         ok_button = tk.Button(result_window, text="OK", command=result_window.destroy, font=("Arial", 12),
                               bg="#4CAF50", fg="white")
@@ -241,32 +246,42 @@ class QuizApp:
 
     def show_hint(self):
         """Show a hint for the current question."""
-        question = self.selected_questions[self.current_question]
+        question = self.selected_questions[self.current_question] if not self.practice_mode else self.question_data[self.current_question]
         hint = question.get("Hint", "No hint available.")
         messagebox.showinfo("Hint", hint)
+
+    def format_time(self, seconds):
+        """Convert seconds to MM:SS format."""
+        return f"{seconds // 60:02}:{seconds % 60:02}"
+
+    def countdown(self):
+        """Countdown timer."""
+        if self.timer > 0:
+            self.timer -= 1
+            self.timer_label.config(text=f"Time left: {self.format_time(self.timer)}")
+            if self.root.winfo_exists():  # Kiểm tra xem cửa sổ còn tồn tại hay không
+                self.root.after(1000, self.countdown)
+            else:
+                return  # Nếu cửa sổ đã bị đóng, thoát khỏi countdown
+        else:
+            self.submit_answer(force=True)
 
 
 def load_questions_from_excel(file_path):
     """Load questions from an Excel file."""
     try:
         df = pd.read_excel(file_path)
-        print("Column names in the Excel file:", df.columns.tolist())
         df.columns = df.columns.str.strip()
 
-        # Các cột cần thiết để quiz hoạt động
-        required_columns = ['Question', 'Answer', 'Answer Option A', 'Answer Option B', 'Answer Option C',
-                            'Answer Option D']
+        required_columns = ['Question', 'Answer', 'Answer Option A', 'Answer Option B', 'Answer Option C', 'Answer Option D']
         missing_columns = [col for col in required_columns if col not in df.columns]
 
         if missing_columns:
             raise ValueError(f"Missing one or more required columns: {missing_columns}")
 
-        # Đọc dữ liệu từ file Excel và chuyển đổi thành dictionary
         questions = df.to_dict(orient="records")
 
-        # Duyệt qua các câu hỏi và gán "Answer" làm gợi ý (Hint)
         for question in questions:
-            # Dùng cột 'Answer' làm gợi ý cho mỗi câu hỏi
             question['Hint'] = question['Answer']
 
         return questions
@@ -275,12 +290,39 @@ def load_questions_from_excel(file_path):
         messagebox.showerror("Error", f"Error loading questions: {e}")
         return []
 
+def start_mode_choice():
+    """Create a screen to select quiz or practice mode."""
+    mode_choice_window = tk.Tk()
+    mode_choice_window.title("Select Mode")
+    mode_choice_window.geometry("400x300")
+
+    mode_choice_label = tk.Label(mode_choice_window, text="Select Mode", font=("Arial", 16), pady=20)
+    mode_choice_label.pack()
+
+    def start_practice():
+        questions = load_questions_from_excel(excel_path)
+        if questions:
+            mode_choice_window.destroy()
+            root = tk.Tk()
+            app = QuizApp(root, questions, practice_mode=True)
+            root.mainloop()
+
+    def start_quiz():
+        questions = load_questions_from_excel(excel_path)
+        if questions:
+            mode_choice_window.destroy()
+            root = tk.Tk()
+            app = QuizApp(root, questions, practice_mode=False)
+            root.mainloop()
+
+    practice_button = tk.Button(mode_choice_window, text="Practice Mode", command=start_practice, width=20, height=2)
+    practice_button.pack(pady=10)
+
+    quiz_button = tk.Button(mode_choice_window, text="Quiz Mode", command=start_quiz, width=20, height=2)
+    quiz_button.pack(pady=10)
+
+    mode_choice_window.mainloop()
 
 if __name__ == "__main__":
     excel_path = r"D:\StudyVKU\Year 3\Temp 1\CD 1\Java Web Advance-20241008T120028Z-001\Java Web Advance\JWEB\4_Quiz\JWEB_Question Bank_v1.1.xlsx"
-    questions = load_questions_from_excel(excel_path)
-
-    if questions:
-        root = tk.Tk()
-        app = QuizApp(root, questions)
-        root.mainloop()
+    start_mode_choice()
