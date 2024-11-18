@@ -1,0 +1,106 @@
+question,user_answer,correct_answer,time_taken
+Which of the following code can be used to send an error response to the client using the specified status code and clearing the buffer.,B,B,5.57
+pageContext is instance of which class?,C,C,3.4
+Which of the following is true about Execution phase in JSP life cycle?,D,D,2.04
+Which of the following code is used to get session in servlet?,D,A,4.54
+The getSession() method with 'true' as its parameter [ getSession(true) ] it will return the appropriate session object when__,B,D,2.13
+"To send binary output to response, which method of HttpServletResponse is used to get the Writer/ Stream object ?",D,D,2.31
+"Consider the following Deployment Descriptor code snippet:
+... 
+<filter>    
+        <filter-name>NullFilter 1</filter-name>    
+        <filter-class>com.nullhaus.NullFilter</filter-class> 
+</filter>
+ ...
+
+and the following Filter code:
+
+package com.nullhaus; 
+import javax.servlet.annotation.*;
+ import javax.servlet.*;
+@WebFilter(urlPatterns = {""/*""}, filterName=""NullFilter 1"") 
+public class NullFilter implements Filter {       
+        // necessary methods goes here 
+}
+
+
+Knowing that above DD snippet is the only filter-related part, how many filter instances will be created by the Servlet container?
+",D,C,1.72
+Which of the following request attributes that an error-handling servlet can access to analyse the nature of error/exception?,C,D,1.86
+"Which of the following code is used to get session id of a HTTP Session object
+in servlets?",D,B,2.1
+What is the key difference between using a <jsp:forward> and HttpServletResponse.sendRedirect()?,D,A,6.54
+Which is the methods of generated Servlet?,D,D,3.34
+All servlets must implement the Servlet interface of package:,D,B,1.75
+Which deployment descriptor element is used to specify a ServletContext- Listener? (Select one),D,B,1.59
+"Considering the following HTML form code snippet and the servlet code, what will be the result of servlet invocation after the form has been submitted?
+
+<!-- form.html -->
+<form action=""myServlet?var=q1&var=q2"" method=""POST"">
+  <input name=""var"" type=""hidden"" value=""q3"" />
+  <input type=""submit"" />
+</form>
+
+<!-- NullServlet.java -->
+package com.nullhaus;
+import javax.servlet.annotation.*;
+import javax.servlet.http.*;
+import java.io.*;
+import java.util.*;
+@WebServlet(""/myServlet"")
+public class NullServlet extends HttpServlet {
+ public void doPost(HttpServletRequest req, HttpServletResponse resp) {
+ String[] param = req.getParameterValues(""var"");
+ resp.getWriter().println(Arrays.toString(param));
+ }
+}",D,A,1.56
+Which of the following are the session tracking techniques?,D,B,1.8
+"The method forward(request, response) will__?",D,A,1.41
+Which of the following is true about filters?,D,A,1.56
+Which of the following is not a implicit object?,C,C,1.82
+Which of the following is true about <jsp:setProperty> action?,D,C,1.8
+Where filters are defined?,D,A,1.64
+" Which of the following code can be used to set the content type for the body of
+the response?",B,B,19.13
+The include() method of RequestDispatcher,A,A,19.94
+Which is the methods of generated Servlet?,D,D,17.47
+Choose the statement that best describes the relationship between JSP and servlets:,D,D,44.28
+"Which of the following code is used to delete an attribute from a HTTP Session
+object in servlets?",A,A,28.07
+Which of the following code retrieves the context of the request?,B,B,11.73
+What are the mechanisms available in ServletContextListener interface?,B,B,6.33
+"Which of the following code is used to update an attribute in a HTTP Session
+object in servlets?",A,A,8.41
+Which of the following code can be used to redirect user to different url?,B,B,9.77
+Which of the following is not a implicit object?,C,C,17.97
+What programming language(s) or scripting language(s) does Java Server Pages (JSP) support?,C,C,32.69
+"The Web server that executes the servlet creates a_________ object and passes this to the servlet's service method (which, in turn, passes it to doGet or doPost).",D,D,109.41
+The client can access the servlet only if the servlet is installed on a ________ that can respond to servlet requests.,B,B,6.57
+Which of the following is true about <jsp:setProperty> action?,C,C,24.37
+Which of the following code is used to add an attribute in a HTTP Session object in servlets?,B,B,15.17
+What is the purpose of session management?,C,C,34.36
+"The method forward(request, response) will__?",A,A,4.83
+"Which of the following values are invalid RequestDispatcher
+types:",D,D,7.46
+"Considering the following HTML form code snippet and the servlet code, what will be the result of servlet invocation after the form has been submitted?
+
+<!-- form.html -->
+<form action=""myServlet?var=q1&var=q2"" method=""POST"">
+  <input name=""var"" type=""hidden"" value=""q3"" />
+  <input type=""submit"" />
+</form>
+
+<!-- NullServlet.java -->
+package com.nullhaus;
+import javax.servlet.annotation.*;
+import javax.servlet.http.*;
+import java.io.*;
+import java.util.*;
+@WebServlet(""/myServlet"")
+public class NullServlet extends HttpServlet {
+ public void doPost(HttpServletRequest req, HttpServletResponse resp) {
+ String[] param = req.getParameterValues(""var"");
+ resp.getWriter().println(Arrays.toString(param));
+ }
+}",A,A,11.65
+All servlets must implement the Servlet interface of package:,B,B,6.77

@@ -34,14 +34,14 @@ class QuizApp:
         self.create_ui()
 
     def create_ui(self):
-        """Set up the main user interface."""
-        self.content_frame = tk.Frame(self.root, bg="#ffffff", padx=20, pady=20)
+        """Set up the main user interface with improved visuals."""
+        self.content_frame = tk.Frame(self.root, bg="#f9f9f9", padx=20, pady=20)
         self.content_frame.pack(fill="both", expand=True)
 
         # Scrollable question frame
-        self.canvas = tk.Canvas(self.content_frame, bg="#ffffff", highlightthickness=0)
+        self.canvas = tk.Canvas(self.content_frame, bg="#f9f9f9", highlightthickness=0)
         self.scrollbar = ttk.Scrollbar(self.content_frame, orient="vertical", command=self.canvas.yview)
-        self.question_scroll_frame = tk.Frame(self.canvas, bg="#ffffff")
+        self.question_scroll_frame = tk.Frame(self.canvas, bg="#f9f9f9")
 
         self.question_scroll_frame.bind("<Configure>",
                                         lambda e: self.canvas.configure(scrollregion=self.canvas.bbox("all")))
@@ -51,44 +51,50 @@ class QuizApp:
         self.canvas.pack(side="left", fill="both", expand=True)
         self.scrollbar.pack(side="right", fill="y")
 
+        # Question Label
         self.question_label = tk.Label(self.question_scroll_frame, text="", wraplength=650,
-                                       font=("Arial", 16, "bold"), justify="center", bg="#ffffff", fg="#333333")
+                                       font=("Arial", 18, "bold"), justify="center", bg="#f9f9f9", fg="#444")
         self.question_label.pack(pady=20)
 
+        # Status Label
         self.status_label = tk.Label(self.content_frame, text="Question 1/20",
-                                     font=("Arial", 12), bg="#ffffff", fg="#666666")
+                                     font=("Arial", 12, "italic"), bg="#f9f9f9", fg="#888")
         self.status_label.pack(pady=10)
 
+        # Progress Bar
         self.progress = tk.IntVar()
+        style = ttk.Style()
+        style.configure("Custom.Horizontal.TProgressbar", thickness=15, troughcolor="#ddd",
+                        background="#4CAF50", bordercolor="#888", lightcolor="#6FCF97", darkcolor="#388E3C")
         self.progress_bar = ttk.Progressbar(self.content_frame, length=500, variable=self.progress,
                                             maximum=self.total_questions, style="Custom.Horizontal.TProgressbar")
         self.progress_bar.pack(pady=15)
 
-        # Options frame
-        self.options_frame = tk.Frame(self.content_frame, bg="#ffffff")
+        # Options Frame
+        self.options_frame = tk.Frame(self.content_frame, bg="#f9f9f9")
         self.options_frame.pack(pady=20)
 
         self.radio_buttons = []
         for i in range(4):
             rb = tk.Radiobutton(self.options_frame, text="", variable=self.selected_option, value=i,
-                                font=("Arial", 12), bg="#ffffff", fg="#333333",
-                                anchor="w", indicatoron=False, width=50, pady=5,
-                                relief="ridge", bd=1)
+                                font=("Arial", 14), bg="#ffffff", fg="#444",
+                                anchor="w", indicatoron=False, width=50, pady=10,
+                                relief="solid", bd=1, selectcolor="#D3E4CD", activebackground="#EAF4EB")
             rb.pack(anchor="w", padx=10, pady=5)
             self.radio_buttons.append(rb)
 
-        # Button frame
-        self.button_frame = tk.Frame(self.content_frame, bg="#ffffff")
+        # Button Frame
+        self.button_frame = tk.Frame(self.content_frame, bg="#f9f9f9")
         self.button_frame.pack(pady=20)
 
         self.submit_button = tk.Button(self.button_frame, text="Submit", command=self.submit_answer,
                                        font=("Arial", 14), bg="#4CAF50", fg="white",
-                                       activebackground="#45a049", activeforeground="white", width=15, bd=0)
+                                       activebackground="#388E3C", activeforeground="white", width=15, bd=0)
         self.submit_button.pack(side="left", padx=10)
 
         self.restart_button = tk.Button(self.button_frame, text="Restart", command=self.restart_quiz,
                                         font=("Arial", 14), bg="#f44336", fg="white",
-                                        activebackground="#e53935", activeforeground="white", width=15, bd=0)
+                                        activebackground="#D32F2F", activeforeground="white", width=15, bd=0)
         self.restart_button.pack(side="right", padx=10)
         self.restart_button.pack_forget()
 
@@ -105,51 +111,67 @@ class QuizApp:
 
         self.back_to_menu_button = tk.Button(self.button_frame, text="Back to Menu", command=self.back_to_menu,
                                              font=("Arial", 14), bg="#FFC107", fg="white",
-                                             activebackground="#FFB300", activeforeground="white", width=15, bd=0)
+                                             activebackground="#FFA000", activeforeground="white", width=15, bd=0)
         self.back_to_menu_button.pack(side="left", padx=10)
 
         self.show_question()
+
+
+    def show_question(self):
+        """Display the current question and options with better layout and visuals."""
+        if self.current_question >= len(self.selected_questions if not self.practice_mode else self.question_data):
+            messagebox.showinfo("End of Quiz", "This is the last question!")
+            return
+
+        # Get the current question
+        question = (self.selected_questions[self.current_question]
+                    if not self.practice_mode
+                    else self.question_data[self.current_question])
+        self.question_label.config(text=f"Q{self.current_question + 1}: {question['Question']}")
+        self.selected_option.set(-1)  # Reset the selected option
+
+        # Update options dynamically
+        options = [question["Answer Option A"], question["Answer Option B"],
+                   question["Answer Option C"], question["Answer Option D"]]
+        for i, rb in enumerate(self.radio_buttons):
+            rb.config(text=f"{chr(65 + i)}. {options[i]}", fg="#444")
+
+        # Update progress and status
+        self.status_label.config(text=f"Question {self.current_question + 1}/{self.total_questions}")
+        self.progress.set(self.current_question + 1)
+
+        # Track time for each question in quiz mode
+        if not self.practice_mode:
+            self.start_time = time.time()
+
+
 
     def back_to_menu(self):
         """Go back to the main menu."""
         self.root.destroy()  # Destroy the current window
         start_mode_choice()  # Show the mode selection menu again
-
-
-    def show_question(self):
-        """Display the current question and options."""
-        question = self.selected_questions[self.current_question] if not self.practice_mode else self.question_data[self.current_question]
-        self.question_label.config(text=f"Q{self.current_question + 1}: {question['Question']}")
-        self.selected_option.set(-1)
-
-        options = [question["Answer Option A"], question["Answer Option B"],
-                   question["Answer Option C"], question["Answer Option D"]]
-        for i, rb in enumerate(self.radio_buttons):
-            rb.config(text=options[i])
-
-        self.status_label.config(text=f"Question {self.current_question + 1}/{self.total_questions}")
-        self.progress.set(self.current_question + 1)
-
-        if not self.practice_mode:
-            self.start_time = time.time()
-
     def submit_answer(self, force=False):
         """Submit the selected answer."""
         if not force and self.selected_option.get() == "-1":
             messagebox.showwarning("Warning", "Please select an answer!")
             return
 
+        # Determine user's choice
         selected_index = int(self.selected_option.get()) if not force else -1
-        question = self.selected_questions[self.current_question] if not self.practice_mode else self.question_data[self.current_question]
+        question = (self.selected_questions[self.current_question]
+                    if not self.practice_mode
+                    else self.question_data[self.current_question])
 
+        # Validate the answer
         correct_answers = question["Answer"].split(',')
         correct_answers = [answer.strip() for answer in correct_answers]
-
         user_answer = ["A", "B", "C", "D"][selected_index] if selected_index != -1 else None
 
+        # Update score
         if user_answer in correct_answers:
             self.score += 1
 
+        # Log answer time in quiz mode
         if not self.practice_mode:
             answer_time = time.time() - self.start_time
             self.answer_times.append({
@@ -159,8 +181,8 @@ class QuizApp:
                 'time_taken': round(answer_time, 2)
             })
 
+        # Move to next question or show results
         self.current_question += 1
-
         if self.current_question < len(self.selected_questions) if not self.practice_mode else len(self.question_data):
             self.show_question()
         else:
@@ -168,20 +190,23 @@ class QuizApp:
 
     def show_result(self):
         """Display the final result."""
+        total_time = sum(item['time_taken'] for item in self.answer_times) if not self.practice_mode else 0
         if not self.practice_mode:
-            messagebox.showinfo("Quiz Completed", f"Your score is: {self.score}/{self.total_questions}")
+            messagebox.showinfo("Quiz Completed",
+                                f"Your score: {self.score}/{self.total_questions}\n"
+                                f"Total time: {round(total_time, 2)} seconds.")
             self.save_results()  # Save results to CSV
 
         self.submit_button.config(state="disabled")
-        self.restart_button.pack(pady=10)
-        self.details_button.pack(pady=10)
+        self.restart_button.pack(pady=10)  # Display restart button
+        self.details_button.pack(pady=10)  # Display details button
 
     def save_results(self):
         """Save quiz results to CSV."""
-        filename = ".venv/quiz_results.csv"
+        filename = "quiz_results.csv"
         fieldnames = ['question', 'user_answer', 'correct_answer', 'time_taken']
 
-        with open(filename, mode='a', newline='') as file:
+        with open(filename, mode='a', newline='', encoding="utf-8") as file:
             writer = csv.DictWriter(file, fieldnames=fieldnames)
             if file.tell() == 0:  # Write header if file is empty
                 writer.writeheader()
@@ -196,12 +221,15 @@ class QuizApp:
         self.current_question = 0
         self.score = 0
         self.answer_times = []
-        self.selected_questions = random.sample(self.question_data, min(self.total_questions, len(self.question_data)))
+        self.selected_questions = random.sample(self.question_data, self.total_questions)
         self.submit_button.config(state="normal")
         self.restart_button.pack_forget()
         self.details_button.pack_forget()
         self.show_question()
+
+        # Reset timer in quiz mode
         if not self.practice_mode:
+            self.timer = 1200
             self.countdown()
 
     def show_answer_details(self):
